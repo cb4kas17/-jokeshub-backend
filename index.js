@@ -25,17 +25,21 @@ app.use('/api', commentsRoute);
 app.use((req, res) => {
     res.status(404).send('<h1>error 404</h1>');
 });
-//database connection
-app.use(express.static(path.join(__dirname, '/client/build')));
 
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '/client/build', 'index.html'));
-});
+//serve static asstes if in production
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static('client/build'));
+    app.get('*', (req, res) => {
+        res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
+    });
+}
+
+//database connection
 mongoose
-    .connect(process.env.DB || 4000, { useNewUrlParser: true, useUnifiedTopology: true })
+    .connect(process.env.DB, { useNewUrlParser: true, useUnifiedTopology: true })
     .then((result) => {
         console.log('connected to database! listening to port: ' + process.env.PORT);
-        app.listen(process.env.PORT); //request listener, only fires when successfully connected to database
+        app.listen(process.env.PORT || 4000); //request listener, only fires when successfully connected to database
     })
     .catch((err) => {
         console.log(err);
